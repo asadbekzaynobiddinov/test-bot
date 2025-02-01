@@ -164,7 +164,7 @@ export class AskPromocodeScene {
     const currentUser = await this.userRepo.findOne({
       where: { telegram_id: `${ctx.from.id}` },
     });
-    await ctx.reply(mainMessage[currentUser.lang], {
+    await ctx.editMessageText(mainMessage[currentUser.lang], {
       reply_markup: menuKeys[currentUser.lang],
     });
     ctx.scene.leave();
