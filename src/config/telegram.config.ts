@@ -21,6 +21,7 @@ const telegrafModuleOptions = (): TelegrafModuleOptions => {
     launchOptions: {
       webhook: {
         domain: config.WEBHOOK_URL,
+        hookPath: '/telegraf/' + config.BOT_SECRET_PATH,
       },
     },
   };

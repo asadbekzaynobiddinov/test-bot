@@ -12,6 +12,7 @@ export type ConfigType = {
   BUYURTMALAR_KANALI: string;
   ARIZALAR_KANALI: string;
   WEBHOOK_URL: string;
+  BOT_SECRET_PATH: string;
 };
 
 export const config: ConfigType = {
@@ -25,4 +26,5 @@ export const config: ConfigType = {
   ARIZALAR_KANALI: process.env.ARIZALAR_KANALI,
   BUYURTMALAR_KANALI: process.env.BUYURTMALAR_KANALI,
   WEBHOOK_URL: process.env.WEBHOOK_URL,
+  BOT_SECRET_PATH: process.env.BOT_SECRET_PATH,
 };
