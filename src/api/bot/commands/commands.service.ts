@@ -28,7 +28,7 @@ export class CommandsService {
       });
       return;
     }
-    await ctx.reply(mainMessage[currentUser.lang], {
+    ctx.session.lastMessage = await ctx.reply(mainMessage[currentUser.lang], {
       reply_markup: menuKeys[currentUser.lang],
     });
   }

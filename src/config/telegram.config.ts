@@ -18,6 +18,11 @@ const telegrafModuleOptions = (): TelegrafModuleOptions => {
         await next();
       },
     ],
+    launchOptions: {
+      webhook: {
+        domain: config.WEBHOOK_URL,
+      },
+    },
   };
 };
 

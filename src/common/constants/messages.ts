@@ -16,6 +16,18 @@ export const noPaymentMessage = {
   ru: 'У вас пока нет платежей',
 };
 
+export const dateMessage = {
+  uz: '📅 Sana: ',
+  en: '📅 Date: ',
+  ru: '📅 Дата: ',
+};
+
+export const amountMessage = {
+  uz: '💰 Miqdor: ',
+  en: '💰 Amount: ',
+  ru: '💰 Сумма: ',
+};
+
 export const startOfListMessages = {
   uz: "Siz ro'yxatning boshidasiz",
   en: 'You are at the beginning of the list',
@@ -50,6 +62,12 @@ export const paidOrderMessages = {
   uz: '✅: Buyurtma bajarilgan',
   en: '✅: Order completed',
   ru: '✅: Заказ выполнен',
+};
+
+export const acceptedMessages = {
+  uz: '✅: To‘lov qabul qilingan',
+  en: '✅: Payment accepted',
+  ru: '✅: Платеж принят',
 };
 
 export const langMessages = {
@@ -243,9 +261,15 @@ export const phoneNumberMessage = {
 };
 
 export const promocodeMessage = {
-  uz: `Ajoyib. 👌🏻\nEndi asosiy qism. \nPromokod bo'lsa kiriting 🎟️\nYo'q bo'lsa shunchaki yo'q deng. 🤫`,
-  en: 'Excellent. 👌🏻\nNow the main part. \nIf you have a promo code, enter it 🎟️\nIf not, simply say no. 🤫',
-  ru: 'Прекрасно. 👌🏻\nТеперь основная часть. \nЕсли у вас есть промокод, введите его 🎟️\nЕсли нет, просто скажите «нет» 🤫',
+  uz: `Promocode bormi❔`,
+  en: `Do you have a promo code❔`,
+  ru: `У вас есть промокод❔`,
+};
+
+export const askPromocodeMessage = {
+  uz: 'Promokodni kiriting: ',
+  en: 'Enter the promo code: ',
+  ru: 'Введите промокод: ',
 };
 
 export const phoneNumberButtons = {
@@ -283,3 +307,25 @@ export const backToProfileText = {
   en: '🔙 Back to Profile',
   ru: '🔙 Вернуться в профиль',
 };
+
+export const requireMessage = {
+  uz: `Botdan to'liq foydalanish uchun \navval quyidagi kanallarga a'zo bo'ling`,
+  en: `To fully use the bot, please subscribe to the following channels first`,
+  ru: `Для полного использования бота, пожалуйста, подпишитесь на следующие каналы`,
+};
+
+export const subscribeMessage = {
+  uz: `A'zo bo'ldim ✅`,
+  en: `Subscribed ✅`,
+  ru: `Подписался ✅`,
+};
+
+export const joinMessage = {
+  uz: `Qo'shilish ➕`,
+  en: `Join ➕`,
+  ru: `Присоединиться ➕`,
+};
+
+export const requireChanels = [
+  ['@fulstack_dev', 'https://t.me/+rdEyAn6RqTNlY2Fi'],
+];

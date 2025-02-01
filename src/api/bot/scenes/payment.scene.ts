@@ -106,7 +106,7 @@ export class PaymentImage {
         response.data,
       );
 
-      payment.image_url = `http://localhost:3000/uploads/${currentUser.telegram_id}${payment.id}${fileUrl.href.split('photos/')[1]}`;
+      payment.image_url = `./uploads/${currentUser.telegram_id}${payment.id}${fileUrl.href.split('photos/')[1]}`;
 
       await this.paymentRepo.save(payment);
 

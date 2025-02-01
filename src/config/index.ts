@@ -11,6 +11,7 @@ export type ConfigType = {
   TOKEN: string;
   BUYURTMALAR_KANALI: string;
   ARIZALAR_KANALI: string;
+  WEBHOOK_URL: string;
 };
 
 export const config: ConfigType = {
@@ -23,4 +24,5 @@ export const config: ConfigType = {
   TOKEN: process.env.TOKEN,
   ARIZALAR_KANALI: process.env.ARIZALAR_KANALI,
   BUYURTMALAR_KANALI: process.env.BUYURTMALAR_KANALI,
+  WEBHOOK_URL: process.env.WEBHOOK_URL,
 };

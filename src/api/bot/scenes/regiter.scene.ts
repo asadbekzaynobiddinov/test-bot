@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Ctx, Scene, SceneEnter, On } from 'nestjs-telegraf';
+import { Ctx, Scene, SceneEnter, On, Action } from 'nestjs-telegraf';
 import { SceneContext } from 'telegraf/typings/scenes';
 import {
   emailMessage,
@@ -9,6 +9,8 @@ import {
   promocodeMessage,
   mainMessage,
   menuKeys,
+  yesOrNo,
+  askPromocodeMessage,
 } from 'src/common/constants';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Promocode, User } from 'src/core/entity';
@@ -129,19 +131,17 @@ export class PhoneNumberScene {
         { telegram_id: `${ctx.from.id}` },
         { phone_number },
       );
-      await ctx.scene.enter('promocode');
+      await ctx.scene.enter('askPromocode');
     } else {
       await ctx.reply(phoneNumberMessage[currentUser.lang][1]);
     }
   }
 }
 
-@Scene('promocode')
-export class PromocodeScene {
+@Scene('askPromocode')
+export class AskPromocodeScene {
   constructor(
     @InjectRepository(User) private readonly userRepo: UserRepository,
-    @InjectRepository(Promocode)
-    private readonly promocodeRepo: PromocodeRepository,
   ) {}
 
   @SceneEnter()
@@ -149,11 +149,46 @@ export class PromocodeScene {
     const currentUser = await this.userRepo.findOne({
       where: { telegram_id: `${ctx.from.id}` },
     });
-    await ctx.reply(promocodeMessage[currentUser.lang]);
+    await ctx.reply(promocodeMessage[currentUser.lang], {
+      reply_markup: yesOrNo[currentUser.lang],
+    });
+  }
+
+  @Action('yes')
+  async yes(@Ctx() ctx) {
+    ctx.scene.enter('getPromocode');
+  }
+
+  @Action('no')
+  async no(@Ctx() ctx) {
+    const currentUser = await this.userRepo.findOne({
+      where: { telegram_id: `${ctx.from.id}` },
+    });
+    await ctx.reply(mainMessage[currentUser.lang], {
+      reply_markup: menuKeys[currentUser.lang],
+    });
+    ctx.scene.leave();
+  }
+}
+
+@Scene('getPromocode')
+export class GetPromocode {
+  constructor(
+    @InjectRepository(User) private readonly userRepo: UserRepository,
+    @InjectRepository(Promocode)
+    private readonly promocodeRepo: PromocodeRepository,
+  ) {}
+
+  @SceneEnter()
+  async askPromocode(@Ctx() ctx) {
+    const currentUser = await this.userRepo.findOne({
+      where: { telegram_id: `${ctx.from.id}` },
+    });
+    await ctx.editMessageText(askPromocodeMessage[currentUser.lang]);
   }
 
   @On('text')
-  async askPromocode(@Ctx() ctx) {
+  async onText(@Ctx() ctx) {
     const currentUser = await this.userRepo.findOne({
       where: { telegram_id: `${ctx.from.id}` },
     });

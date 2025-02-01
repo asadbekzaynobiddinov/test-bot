@@ -32,11 +32,17 @@ import {
   endOfListMessages,
   noPaymentMessage,
   paymentHistoryMessage,
+  dateMessage,
+  amountMessage,
+  acceptedMessages,
 } from 'src/common/constants';
 import { OrderRepository, PaymentRepository } from 'src/core/repository';
 import { Markup } from 'telegraf';
+import { UseGuards } from '@nestjs/common';
+import { ChannelSubscriptionGuard, LastMessageGuard } from 'src/common/guard';
 
 @Update()
+@UseGuards(LastMessageGuard)
 export class ActionsService {
   constructor(
     @InjectRepository(User) private readonly userRepo: UserRepository,
@@ -112,6 +118,7 @@ export class ActionsService {
     );
   }
 
+  @UseGuards(ChannelSubscriptionGuard)
   @Action('profile')
   async profile(@Ctx() ctx) {
     const currentUser = await this.userRepo.findOne({
@@ -126,7 +133,7 @@ export class ActionsService {
           /\B(?=(\d{3})+(?!\d))/g,
           ',',
         )} ${profileMessage[currentUser.lang][3]}`;
-    await ctx.editMessageText(message, {
+    ctx.session.lastMessage = await ctx.editMessageText(message, {
       reply_markup: profileKeys[currentUser.lang],
     });
   }
@@ -136,9 +143,12 @@ export class ActionsService {
     const currentUser = await this.userRepo.findOne({
       where: { telegram_id: `${ctx.from.id}` },
     });
-    await ctx.editMessageText(mainMessage[currentUser.lang], {
-      reply_markup: menuKeys[currentUser.lang],
-    });
+    ctx.session.lastMessage = await ctx.editMessageText(
+      mainMessage[currentUser.lang],
+      {
+        reply_markup: menuKeys[currentUser.lang],
+      },
+    );
   }
 
   @Action('backToProfile')
@@ -155,7 +165,7 @@ export class ActionsService {
           /\B(?=(\d{3})+(?!\d))/g,
           ',',
         )} ${profileMessage[currentUser.lang][3]}`;
-    await ctx.editMessageText(message, {
+    ctx.session.lastMessage = await ctx.editMessageText(message, {
       reply_markup: profileKeys[currentUser.lang],
     });
   }
@@ -165,9 +175,12 @@ export class ActionsService {
     const currentUser = await this.userRepo.findOne({
       where: { telegram_id: `${ctx.from.id}` },
     });
-    await ctx.editMessageText(langMessages[currentUser.lang], {
-      reply_markup: setLangKeys[currentUser.lang],
-    });
+    ctx.session.lastMessage = await ctx.editMessageText(
+      langMessages[currentUser.lang],
+      {
+        reply_markup: setLangKeys[currentUser.lang],
+      },
+    );
   }
 
   @Action('setUz')
@@ -176,7 +189,7 @@ export class ActionsService {
       { telegram_id: `${ctx.from.id}` },
       { lang: UserLangs.uz },
     );
-    await ctx.editMessageText(langMessages.uz, {
+    ctx.session.lastMessage = await ctx.editMessageText(langMessages.uz, {
       reply_markup: setLangKeys.uz,
     });
   }
@@ -187,7 +200,7 @@ export class ActionsService {
       { telegram_id: `${ctx.from.id}` },
       { lang: UserLangs.en },
     );
-    await ctx.editMessageText(langMessages.en, {
+    ctx.session.lastMessage = await ctx.editMessageText(langMessages.en, {
       reply_markup: setLangKeys.en,
     });
   }
@@ -198,19 +211,23 @@ export class ActionsService {
       { telegram_id: `${ctx.from.id}` },
       { lang: UserLangs.ru },
     );
-    await ctx.editMessageText(langMessages.ru, {
+    ctx.session.lastMessage = await ctx.editMessageText(langMessages.ru, {
       reply_markup: setLangKeys.ru,
     });
   }
 
+  @UseGuards(ChannelSubscriptionGuard)
   @Action('shop')
   async shop(@Ctx() ctx) {
     const currentUser = await this.userRepo.findOne({
       where: { telegram_id: `${ctx.from.id}` },
     });
-    await ctx.editMessageText(mainMessage[currentUser.lang], {
-      reply_markup: shopKeys[currentUser.lang],
-    });
+    ctx.session.lastMessage = await ctx.editMessageText(
+      mainMessage[currentUser.lang],
+      {
+        reply_markup: shopKeys[currentUser.lang],
+      },
+    );
   }
 
   @Action('startPayment')
@@ -218,14 +235,17 @@ export class ActionsService {
     const currentUser = await this.userRepo.findOne({
       where: { telegram_id: `${ctx.from.id}` },
     });
-    await ctx.editMessageText(mainMessage[currentUser.lang], {
-      reply_markup: paymentMethods[currentUser.lang],
-    });
+    ctx.session.lastMessage = await ctx.editMessageText(
+      mainMessage[currentUser.lang],
+      {
+        reply_markup: paymentMethods[currentUser.lang],
+      },
+    );
   }
 
   @Action('pay')
   async pay(@Ctx() ctx) {
-    await ctx.editMessageText(
+    ctx.session.lastMessage = await ctx.editMessageText(
       `<code>9860190112424188</code>\n` +
         `Alimov Hoshim\n` +
         `Aloqa bank\n` +
@@ -237,25 +257,33 @@ export class ActionsService {
     await ctx.scene.enter('PAYMENT_SCENE');
   }
 
+  @UseGuards(ChannelSubscriptionGuard)
   @Action('manual')
   async manual(@Ctx() ctx) {
     const currentUser = await this.userRepo.findOne({
       where: { telegram_id: `${ctx.from.id}` },
     });
-    await ctx.editMessageText(manualCommandMessage[currentUser.lang], {
-      reply_markup: backToMenuKeys[currentUser.lang],
-    });
+    ctx.session.lastMessage = await ctx.editMessageText(
+      manualCommandMessage[currentUser.lang],
+      {
+        reply_markup: backToMenuKeys[currentUser.lang],
+      },
+    );
   }
 
+  @UseGuards(ChannelSubscriptionGuard)
   @Action('forHelp')
   async forHelp(@Ctx() ctx) {
     const currentUser = await this.userRepo.findOne({
       where: { telegram_id: `${ctx.from.id}` },
     });
-    await ctx.editMessageText(helpCommandMessages[currentUser.lang], {
-      reply_markup: backToMenuKeys[currentUser.lang],
-      parse_mode: 'HTML',
-    });
+    ctx.session.lastMessage = await ctx.editMessageText(
+      helpCommandMessages[currentUser.lang],
+      {
+        reply_markup: backToMenuKeys[currentUser.lang],
+        parse_mode: 'HTML',
+      },
+    );
   }
 
   @Action('backToShop')
@@ -263,9 +291,12 @@ export class ActionsService {
     const currentUser = await this.userRepo.findOne({
       where: { telegram_id: `${ctx.from.id}` },
     });
-    await ctx.editMessageText(mainMessage[currentUser.lang], {
-      reply_markup: shopKeys[currentUser.lang],
-    });
+    ctx.session.lastMessage = await ctx.editMessageText(
+      mainMessage[currentUser.lang],
+      {
+        reply_markup: shopKeys[currentUser.lang],
+      },
+    );
   }
 
   @Action('pubg')
@@ -273,9 +304,12 @@ export class ActionsService {
     const currentUser = await this.userRepo.findOne({
       where: { telegram_id: `${ctx.from.id}` },
     });
-    await ctx.editMessageText(mainMessage[currentUser.lang], {
-      reply_markup: pubgKeys[currentUser.lang],
-    });
+    ctx.session.lastMessage = await ctx.editMessageText(
+      mainMessage[currentUser.lang],
+      {
+        reply_markup: pubgKeys[currentUser.lang],
+      },
+    );
   }
 
   @Action('ff')
@@ -283,9 +317,12 @@ export class ActionsService {
     const currentUser = await this.userRepo.findOne({
       where: { telegram_id: `${ctx.from.id}` },
     });
-    await ctx.editMessageText(mainMessage[currentUser.lang], {
-      reply_markup: freeFireKeys[currentUser.lang],
-    });
+    ctx.session.lastMessage = await ctx.editMessageText(
+      mainMessage[currentUser.lang],
+      {
+        reply_markup: freeFireKeys[currentUser.lang],
+      },
+    );
   }
 
   @Action('mlbb_sng')
@@ -293,9 +330,12 @@ export class ActionsService {
     const currentUser = await this.userRepo.findOne({
       where: { telegram_id: `${ctx.from.id}` },
     });
-    await ctx.editMessageText(mainMessage[currentUser.lang], {
-      reply_markup: mobileLegendsSng[currentUser.lang],
-    });
+    ctx.session.lastMessage = await ctx.editMessageText(
+      mainMessage[currentUser.lang],
+      {
+        reply_markup: mobileLegendsSng[currentUser.lang],
+      },
+    );
   }
 
   @Action('mlbb_turk')
@@ -303,9 +343,12 @@ export class ActionsService {
     const currentUser = await this.userRepo.findOne({
       where: { telegram_id: `${ctx.from.id}` },
     });
-    await ctx.editMessageText(mainMessage[currentUser.lang], {
-      reply_markup: mobileLegendsTurk[currentUser.lang],
-    });
+    ctx.session.lastMessage = await ctx.editMessageText(
+      mainMessage[currentUser.lang],
+      {
+        reply_markup: mobileLegendsTurk[currentUser.lang],
+      },
+    );
   }
 
   @Action(/shop_key/)
@@ -315,9 +358,12 @@ export class ActionsService {
     });
     const price = ctx.update.callback_query.data.split('=')[2];
     if (+currentUser.balance < +price) {
-      await ctx.editMessageText(balanceMessage[currentUser.lang], {
-        reply_markup: paymentButtons[currentUser.lang],
-      });
+      ctx.session.lastMessage = await ctx.editMessageText(
+        balanceMessage[currentUser.lang],
+        {
+          reply_markup: paymentButtons[currentUser.lang],
+        },
+      );
       return;
     }
     await ctx.scene.enter('ORDER_SCENE');
@@ -349,7 +395,7 @@ export class ActionsService {
     );
     payment.status = Status.done;
     await this.paymentRepo.save(payment);
-    await ctx.editMessageCaption(
+    ctx.session.lastMessage = await ctx.editMessageCaption(
       `Email: ${payment.user.email}\n` +
         `Telefon: ${payment.user.phone_number}\n` +
         `Miqdor: ${payment.amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')} so'm\n` +
@@ -517,7 +563,7 @@ export class ActionsService {
       ),
     ]);
 
-    await ctx.editMessageText(
+    ctx.session.lastMessage = await ctx.editMessageText(
       orderHistoryMessage[currentUser.lang],
       Markup.inlineKeyboard(rows),
     );
@@ -591,7 +637,7 @@ export class ActionsService {
       ),
     ]);
 
-    await ctx.editMessageText(
+    ctx.session.lastMessage = await ctx.editMessageText(
       orderHistoryMessage[currentUser.lang],
       Markup.inlineKeyboard(rows),
     );
@@ -656,7 +702,7 @@ export class ActionsService {
       ),
     ]);
 
-    await ctx.editMessageText(
+    ctx.session.lastMessage = await ctx.editMessageText(
       orderHistoryMessage[currentUser.lang],
       Markup.inlineKeyboard(rows),
     );
@@ -752,7 +798,7 @@ export class ActionsService {
       ),
     ]);
 
-    await ctx.editMessageText(
+    ctx.session.lastMessage = await ctx.editMessageText(
       paymentHistoryMessage[currentUser.lang],
       Markup.inlineKeyboard(rows),
     );
@@ -826,7 +872,7 @@ export class ActionsService {
       ),
     ]);
 
-    await ctx.editMessageText(
+    ctx.session.lastMessage = await ctx.editMessageText(
       orderHistoryMessage[currentUser.lang],
       Markup.inlineKeyboard(rows),
     );
@@ -891,7 +937,7 @@ export class ActionsService {
       ),
     ]);
 
-    await ctx.editMessageText(
+    ctx.session.lastMessage = await ctx.editMessageText(
       orderHistoryMessage[currentUser.lang],
       Markup.inlineKeyboard(rows),
     );
@@ -910,10 +956,44 @@ export class ActionsService {
         status: Status.done,
       },
     });
-    console.log(payments);
-    await ctx.telegram.sendPhoto(
-      currentUser.telegram_id,
-      payments[0].image_url,
+    await ctx.editMessageText(paymentHistoryMessage[currentUser.lang]);
+
+    for (const payment of payments) {
+      await ctx.telegram.sendPhoto(
+        currentUser.telegram_id,
+        {
+          source: payment.image_url,
+        },
+        {
+          caption:
+            `${amountMessage[currentUser.lang]}${payment.amount
+              .toString()
+              .replace(
+                /\B(?=(\d{3})+(?!\d))/g,
+                ',',
+              )} ${profileMessage[currentUser.lang][3]}\n` +
+            `${dateMessage[currentUser.lang]}${payment.payment_date.split('-').reverse().join('.')}\n` +
+            `${acceptedMessages[currentUser.lang]}`,
+        },
+      );
+    }
+    ctx.session.lastMessage = await ctx.reply(mainMessage[currentUser.lang], {
+      reply_markup: profileKeys[currentUser.lang],
+    });
+    return;
+  }
+
+  @UseGuards(ChannelSubscriptionGuard)
+  @Action('subscribed')
+  async subscribed(@Ctx() ctx) {
+    const currentUser = await this.userRepo.findOne({
+      where: { telegram_id: `${ctx.from.id}` },
+    });
+    ctx.session.lastMessage = await ctx.editMessageText(
+      mainMessage[currentUser.lang],
+      {
+        reply_markup: menuKeys[currentUser.lang],
+      },
     );
   }
 }

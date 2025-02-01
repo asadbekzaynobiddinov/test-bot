@@ -3,7 +3,8 @@ import {
   PasswordScene,
   RegisterScene,
   PhoneNumberScene,
-  PromocodeScene,
+  AskPromocodeScene,
+  GetPromocode,
 } from './regiter.scene';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Order, Payment, Promocode, User } from 'src/core/entity';
@@ -16,10 +17,11 @@ import { PaymentImage, PaymentScene } from './payment.scene';
     RegisterScene,
     PasswordScene,
     PhoneNumberScene,
-    PromocodeScene,
+    AskPromocodeScene,
     OrderScene,
     PaymentScene,
     PaymentImage,
+    GetPromocode,
   ],
 })
 export class ScenesModule {}

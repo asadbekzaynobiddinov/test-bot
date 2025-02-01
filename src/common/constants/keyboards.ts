@@ -1161,3 +1161,30 @@ export const paymentMethods = {
     ],
   },
 };
+
+export const yesOrNo = {
+  uz: {
+    inline_keyboard: [
+      [
+        Markup.button.callback('Ha ✅', 'yes'),
+        Markup.button.callback(`Yo'q ❌`, 'no'),
+      ],
+    ],
+  },
+  en: {
+    inline_keyboard: [
+      [
+        Markup.button.callback('Yes ✅', 'yes'),
+        Markup.button.callback('No ❌', 'no'),
+      ],
+    ],
+  },
+  ru: {
+    inline_keyboard: [
+      [
+        Markup.button.callback('Да ✅', 'yes'),
+        Markup.button.callback('Нет ❌', 'no'),
+      ],
+    ],
+  },
+};
