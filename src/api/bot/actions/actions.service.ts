@@ -39,10 +39,9 @@ import {
 import { OrderRepository, PaymentRepository } from 'src/core/repository';
 import { Markup } from 'telegraf';
 import { UseGuards } from '@nestjs/common';
-import { ChannelSubscriptionGuard, LastMessageGuard } from 'src/common/guard';
+import { ChannelSubscriptionGuard } from 'src/common/guard';
 
 @Update()
-@UseGuards(LastMessageGuard)
 export class ActionsService {
   constructor(
     @InjectRepository(User) private readonly userRepo: UserRepository,

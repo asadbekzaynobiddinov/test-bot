@@ -13,6 +13,7 @@ import {
 import { config } from 'src/config';
 import axios from 'axios';
 import * as fs from 'fs';
+import * as path from 'path';
 
 @Scene('PAYMENT_SCENE')
 export class PaymentScene {
@@ -101,18 +102,24 @@ export class PaymentImage {
         responseType: 'arraybuffer',
       });
 
-      fs.writeFileSync(
-        `./uploads/${currentUser.telegram_id}${payment.id}${fileUrl.href.split('photos/')[1]}`,
-        response.data,
+      const url = path.join(
+        __dirname,
+        '..',
+        '..',
+        '..',
+        'uploads',
+        `${currentUser.telegram_id}${payment.id}${fileUrl.href.split('photos/')[1]}`,
       );
 
-      payment.image_url = `./uploads/${currentUser.telegram_id}${payment.id}${fileUrl.href.split('photos/')[1]}`;
+      fs.writeFileSync(url, response.data);
+
+      payment.image_url = url;
 
       await this.paymentRepo.save(payment);
 
       await ctx.reply(paymentMessage3[currentUser.lang]);
 
-      await ctx.reply(mainMessage[currentUser.lang], {
+      ctx.session.lastMessage = await ctx.reply(mainMessage[currentUser.lang], {
         reply_markup: menuKeys[currentUser.lang],
       });
 
