@@ -3,6 +3,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { config } from '../config';
 import { User, Payment, Order, Promocode } from '../core/entity';
 import { BotModule } from './bot/bot.module';
+import { APP_GUARD } from '@nestjs/core';
+import { LangGuard } from 'src/common/guard/lang.guard';
 
 @Module({
   imports: [
@@ -17,6 +19,12 @@ import { BotModule } from './bot/bot.module';
       synchronize: true,
     }),
     BotModule,
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: LangGuard,
+    },
   ],
 })
 export class AppModule {}

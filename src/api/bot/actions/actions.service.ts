@@ -174,6 +174,7 @@ export class ActionsService {
     const currentUser = await this.userRepo.findOne({
       where: { telegram_id: `${ctx.from.id}` },
     });
+    console.log(ctx.session.lang);
     ctx.session.lastMessage = await ctx.editMessageText(
       langMessages[currentUser.lang],
       {
