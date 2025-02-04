@@ -19,6 +19,7 @@ import { LangGuard } from 'src/common/guard/lang.guard';
       synchronize: true,
     }),
     BotModule,
+    TypeOrmModule.forFeature([User]),
   ],
   providers: [
     {
