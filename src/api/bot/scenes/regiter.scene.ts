@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { Ctx, Scene, SceneEnter, On, Action } from 'nestjs-telegraf';
-import { SceneContext } from 'telegraf/typings/scenes';
 import {
   emailMessage,
   passwordMessage,
@@ -26,30 +25,24 @@ export class RegisterScene {
   ) {}
   @SceneEnter()
   async sendEmailMessage(ctx) {
-    const currentUser = await this.userRepo.findOne({
-      where: { telegram_id: ctx.from.id.toString() },
-    });
-    await ctx.editMessageText(emailMessage[currentUser.lang][0]);
+    await ctx.editMessageText(emailMessage[ctx.session.lang][0]);
   }
 
   @On('text')
-  async askEmail(@Ctx() ctx: SceneContext) {
-    const currentUser = await this.userRepo.findOne({
-      where: { telegram_id: `${ctx.from.id}` },
-    });
+  async askEmail(@Ctx() ctx) {
     if (ctx.message && 'text' in ctx.message) {
       const email = ctx.message.text;
 
       const userExists = await this.userRepo.findOne({ where: { email } });
 
       if (userExists) {
-        await ctx.reply(emailMessage[currentUser.lang][2]);
+        await ctx.reply(emailMessage[ctx.session.lang][2]);
         return;
       }
 
       const emailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
       if (!emailRegex.test(email)) {
-        await ctx.reply(emailMessage[currentUser.lang][1]);
+        await ctx.reply(emailMessage[ctx.session.lang][1]);
         return;
       }
 
@@ -67,24 +60,17 @@ export class PasswordScene {
     @InjectRepository(User) private readonly userRepo: UserRepository,
   ) {}
   @SceneEnter()
-  async sendPasswordMessage(@Ctx() ctx: SceneContext) {
-    const currentUser = await this.userRepo.findOne({
-      where: { telegram_id: `${ctx.from.id}` },
-    });
-    await ctx.reply(passwordMessage[currentUser.lang][0]);
+  async sendPasswordMessage(@Ctx() ctx) {
+    await ctx.reply(passwordMessage[ctx.session.lang][0]);
   }
 
   @On('text')
-  async askPassword(@Ctx() ctx: SceneContext) {
-    const currentUser = await this.userRepo.findOne({
-      where: { telegram_id: `${ctx.from.id}` },
-    });
-
+  async askPassword(@Ctx() ctx) {
     if (ctx.message && 'text' in ctx.message) {
       const password = ctx.message.text;
 
       if (password.length < 6) {
-        await ctx.reply(passwordMessage[currentUser.lang][1]);
+        await ctx.reply(passwordMessage[ctx.session.lang][1]);
         return;
       }
 
@@ -94,7 +80,7 @@ export class PasswordScene {
       );
       await ctx.scene.enter('phone_number');
     } else {
-      await ctx.reply('ERROR');
+      console.log('error');
     }
   }
 }
@@ -106,14 +92,11 @@ export class PhoneNumberScene {
   ) {}
 
   @SceneEnter()
-  async sendPhonoNumberMessage(@Ctx() ctx: SceneContext) {
-    const currentUser = await this.userRepo.findOne({
-      where: { telegram_id: `${ctx.from.id}` },
-    });
-    await ctx.reply(phoneNumberMessage[currentUser.lang][0], {
+  async sendPhonoNumberMessage(@Ctx() ctx) {
+    await ctx.reply(phoneNumberMessage[ctx.session.lang][0], {
       parse_mode: 'HTML',
       ...Markup.keyboard([
-        [Markup.button.contactRequest(phoneNumberButtons[currentUser.lang])],
+        [Markup.button.contactRequest(phoneNumberButtons[ctx.session.lang])],
       ])
         .resize()
         .oneTime(),
@@ -121,10 +104,7 @@ export class PhoneNumberScene {
   }
 
   @On('contact')
-  async askContact(@Ctx() ctx: SceneContext) {
-    const currentUser = await this.userRepo.findOne({
-      where: { telegram_id: `${ctx.from.id}` },
-    });
+  async askContact(@Ctx() ctx) {
     if (ctx.message && 'contact' in ctx.message) {
       const phone_number = ctx.message.contact.phone_number;
       await this.userRepo.update(
@@ -133,7 +113,7 @@ export class PhoneNumberScene {
       );
       await ctx.scene.enter('askPromocode');
     } else {
-      await ctx.reply(phoneNumberMessage[currentUser.lang][1]);
+      await ctx.reply(phoneNumberMessage[ctx.session.lang][1]);
     }
   }
 }
@@ -145,12 +125,9 @@ export class AskPromocodeScene {
   ) {}
 
   @SceneEnter()
-  async sendPromocodeMessage(@Ctx() ctx: SceneContext) {
-    const currentUser = await this.userRepo.findOne({
-      where: { telegram_id: `${ctx.from.id}` },
-    });
-    await ctx.reply(promocodeMessage[currentUser.lang], {
-      reply_markup: yesOrNo[currentUser.lang],
+  async sendPromocodeMessage(@Ctx() ctx) {
+    await ctx.reply(promocodeMessage[ctx.session.lang], {
+      reply_markup: yesOrNo[ctx.session.lang],
     });
   }
 
@@ -161,11 +138,8 @@ export class AskPromocodeScene {
 
   @Action('no')
   async no(@Ctx() ctx) {
-    const currentUser = await this.userRepo.findOne({
-      where: { telegram_id: `${ctx.from.id}` },
-    });
-    await ctx.editMessageText(mainMessage[currentUser.lang], {
-      reply_markup: menuKeys[currentUser.lang],
+    await ctx.editMessageText(mainMessage[ctx.session.lang], {
+      reply_markup: menuKeys[ctx.session.lang],
     });
     ctx.scene.leave();
   }
@@ -181,17 +155,11 @@ export class GetPromocode {
 
   @SceneEnter()
   async askPromocode(@Ctx() ctx) {
-    const currentUser = await this.userRepo.findOne({
-      where: { telegram_id: `${ctx.from.id}` },
-    });
-    await ctx.editMessageText(askPromocodeMessage[currentUser.lang]);
+    await ctx.editMessageText(askPromocodeMessage[ctx.session.lang]);
   }
 
   @On('text')
   async onText(@Ctx() ctx) {
-    const currentUser = await this.userRepo.findOne({
-      where: { telegram_id: `${ctx.from.id}` },
-    });
     if (ctx.message && 'text' in ctx.message) {
       const content = ctx.message.text;
       const promocode = await this.promocodeRepo.findOne({
@@ -207,8 +175,8 @@ export class GetPromocode {
           { allowed_uses: promocode.allowed_uses - 1 },
         );
       }
-      await ctx.reply(mainMessage[currentUser.lang], {
-        reply_markup: menuKeys[currentUser.lang],
+      ctx.session.lastMessage = await ctx.reply(mainMessage[ctx.session.lang], {
+        reply_markup: menuKeys[ctx.session.lang],
       });
       ctx.scene.leave();
     }

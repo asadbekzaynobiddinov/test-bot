@@ -41,14 +41,11 @@ export class OrderScene {
     });
     await this.orderRepo.save(newOrder);
     ctx.session.orderId = newOrder.id;
-    await ctx.editMessageText(idMeessage[currentUser.lang]);
+    await ctx.editMessageText(idMeessage[ctx.session.lang]);
   }
 
   @On('text')
   async askId(@Ctx() ctx) {
-    const currentUser = await this.userRepo.findOne({
-      where: { telegram_id: `${ctx.from.id}` },
-    });
     if (ctx.message && 'text' in ctx.message) {
       const game_id = ctx.message.text;
       const order = await this.orderRepo.findOne({
@@ -60,17 +57,17 @@ export class OrderScene {
         `🎮 <b>${order.game_type.split('_')[0]}</b>\n` +
         `🆔 <code>${order.game_id}</code>\n` +
         `💸 ${order.amount}\n` +
-        `💵 ${order.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')} ${valuteMessage[currentUser.lang]}`;
+        `💵 ${order.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')} ${valuteMessage[ctx.session.lang]}`;
       await ctx.reply(message, {
         parse_mode: 'HTML',
         ...Markup.inlineKeyboard([
           [
             Markup.button.callback(
-              buyOrCancel[currentUser.lang][0],
+              buyOrCancel[ctx.session.lang][0],
               `buy=${order.id}`,
             ),
             Markup.button.callback(
-              buyOrCancel[currentUser.lang][1],
+              buyOrCancel[ctx.session.lang][1],
               `cancel=${order.id}`,
             ),
           ],
@@ -98,11 +95,11 @@ export class OrderScene {
       `🎮 <b>${order.game_type.split('_')[0]}</b>\n` +
       `🆔 <code>${order.game_id}</code>\n` +
       `💸 ${order.amount}\n` +
-      `💵 ${order.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')} ${valuteMessage[currentUser.lang]}\n` +
-      `${confirmedOrderMessages[currentUser.lang]}`;
+      `💵 ${order.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')} ${valuteMessage[ctx.session.lang]}\n` +
+      `${confirmedOrderMessages[ctx.session.lang]}`;
     await ctx.editMessageText(message, {
       parse_mode: 'HTML',
-      reply_markup: backToShop[currentUser.lang],
+      reply_markup: backToShop[ctx.session.lang],
     });
 
     const chanelMessage =
@@ -110,7 +107,7 @@ export class OrderScene {
       `🎮 <b>${order.game_type}</b>\n` +
       `🆔 <code>${order.game_id}</code>\n` +
       `💸 ${order.amount}\n` +
-      `💵 ${order.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')} ${valuteMessage[currentUser.lang]}\n` +
+      `💵 ${order.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')} ${valuteMessage[ctx.session.lang]}\n` +
       `${order.other ? order.other : ''}`;
 
     await ctx.telegram.sendMessage(config.BUYURTMALAR_KANALI, chanelMessage, {
@@ -131,22 +128,19 @@ export class OrderScene {
   async cancel(@Ctx() ctx) {
     const [, id] = ctx.update.callback_query.data.split('=');
     const order = await this.orderRepo.findOne({ where: { id: +id } });
-    const currentUser = await this.userRepo.findOne({
-      where: { telegram_id: `${ctx.from.id}` },
-    });
 
     const message =
       `🎮 <b>${order.game_type.split('_')[0]}</b>\n` +
       `🆔 <code>${order.game_id}</code>\n` +
       `💸 ${order.amount}\n` +
-      `💵 ${order.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')} ${valuteMessage[currentUser.lang]}\n` +
-      `${canceledOrderMessages[currentUser.lang]}`;
+      `💵 ${order.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')} ${valuteMessage[ctx.session.lang]}\n` +
+      `${canceledOrderMessages[ctx.session.lang]}`;
 
     await this.orderRepo.delete({ id });
 
     await ctx.editMessageText(message, {
       parse_mode: 'HTML',
-      reply_markup: backToShop[currentUser.lang],
+      reply_markup: backToShop[ctx.session.lang],
     });
     ctx.scene.leave();
   }

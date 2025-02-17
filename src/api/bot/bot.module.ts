@@ -7,6 +7,7 @@ import { ScenesModule } from './scenes/scenes.module';
 import { ChannelSubscriptionGuard } from 'src/common/guard';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from 'src/core/entity';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { User } from 'src/core/entity';
     ActionsModule,
     ScenesModule,
     TypeOrmModule.forFeature([User]),
+    AdminModule,
   ],
   providers: [ChannelSubscriptionGuard],
 })

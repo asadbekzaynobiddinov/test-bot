@@ -39,7 +39,7 @@ import {
 import { OrderRepository, PaymentRepository } from 'src/core/repository';
 import { Markup } from 'telegraf';
 import { UseGuards } from '@nestjs/common';
-import { ChannelSubscriptionGuard } from 'src/common/guard';
+import { ChannelSubscriptionGuard, LastMessageGuard } from 'src/common/guard';
 
 @Update()
 export class ActionsService {
@@ -117,135 +117,118 @@ export class ActionsService {
     );
   }
 
-  @UseGuards(ChannelSubscriptionGuard)
+  @UseGuards(ChannelSubscriptionGuard, LastMessageGuard)
   @Action('profile')
   async profile(@Ctx() ctx) {
     const currentUser = await this.userRepo.findOne({
       where: { telegram_id: `${ctx.from.id}` },
     });
     const message =
-      `${profileMessage[currentUser.lang][0]}\n` +
-      `${profileMessage[currentUser.lang][1]}${currentUser.email}\n` +
-      `${profileMessage[currentUser.lang][2]}${currentUser.balance
+      `${profileMessage[ctx.session.lang][0]}\n` +
+      `${profileMessage[ctx.session.lang][1]}${currentUser.email}\n` +
+      `${profileMessage[ctx.session.lang][2]}${currentUser.balance
         .toString()
         .replace(
           /\B(?=(\d{3})+(?!\d))/g,
           ',',
-        )} ${profileMessage[currentUser.lang][3]}`;
-    ctx.session.lastMessage = await ctx.editMessageText(message, {
-      reply_markup: profileKeys[currentUser.lang],
+        )} ${profileMessage[ctx.session.lang][3]}`;
+    await ctx.editMessageText(message, {
+      reply_markup: profileKeys[ctx.session.lang],
     });
   }
 
+  @UseGuards(LastMessageGuard)
   @Action('backToMenu')
   async backToMenu(@Ctx() ctx) {
-    const currentUser = await this.userRepo.findOne({
-      where: { telegram_id: `${ctx.from.id}` },
+    await ctx.editMessageText(mainMessage[ctx.session.lang], {
+      reply_markup: menuKeys[ctx.session.lang],
     });
-    ctx.session.lastMessage = await ctx.editMessageText(
-      mainMessage[currentUser.lang],
-      {
-        reply_markup: menuKeys[currentUser.lang],
-      },
-    );
   }
 
+  @UseGuards(LastMessageGuard)
   @Action('backToProfile')
   async backToProfile(@Ctx() ctx) {
     const currentUser = await this.userRepo.findOne({
       where: { telegram_id: `${ctx.from.id}` },
     });
     const message =
-      `${profileMessage[currentUser.lang][0]}\n` +
-      `${profileMessage[currentUser.lang][1]}${currentUser.email}\n` +
-      `${profileMessage[currentUser.lang][2]}${currentUser.balance
+      `${profileMessage[ctx.session.lang][0]}\n` +
+      `${profileMessage[ctx.session.lang][1]}${currentUser.email}\n` +
+      `${profileMessage[ctx.session.lang][2]}${currentUser.balance
         .toString()
         .replace(
           /\B(?=(\d{3})+(?!\d))/g,
           ',',
-        )} ${profileMessage[currentUser.lang][3]}`;
-    ctx.session.lastMessage = await ctx.editMessageText(message, {
-      reply_markup: profileKeys[currentUser.lang],
+        )} ${profileMessage[ctx.session.lang][3]}`;
+    await ctx.editMessageText(message, {
+      reply_markup: profileKeys[ctx.session.lang],
     });
   }
 
+  @UseGuards(LastMessageGuard)
   @Action('changeLang')
   async changeLang(@Ctx() ctx) {
-    const currentUser = await this.userRepo.findOne({
-      where: { telegram_id: `${ctx.from.id}` },
+    await ctx.editMessageText(langMessages[ctx.session.lang], {
+      reply_markup: setLangKeys[ctx.session.lang],
     });
-    console.log(ctx.session.lang);
-    ctx.session.lastMessage = await ctx.editMessageText(
-      langMessages[currentUser.lang],
-      {
-        reply_markup: setLangKeys[currentUser.lang],
-      },
-    );
   }
 
+  @UseGuards(LastMessageGuard)
   @Action('setUz')
   async setUz(@Ctx() ctx) {
     await this.userRepo.update(
       { telegram_id: `${ctx.from.id}` },
       { lang: UserLangs.uz },
     );
-    ctx.session.lastMessage = await ctx.editMessageText(langMessages.uz, {
+    await ctx.editMessageText(langMessages.uz, {
       reply_markup: setLangKeys.uz,
     });
   }
 
+  @UseGuards(LastMessageGuard)
   @Action('setEn')
   async setEn(@Ctx() ctx) {
     await this.userRepo.update(
       { telegram_id: `${ctx.from.id}` },
       { lang: UserLangs.en },
     );
-    ctx.session.lastMessage = await ctx.editMessageText(langMessages.en, {
+    await ctx.editMessageText(langMessages.en, {
       reply_markup: setLangKeys.en,
     });
   }
 
+  @UseGuards(LastMessageGuard)
   @Action('setRu')
   async setRu(@Ctx() ctx) {
     await this.userRepo.update(
       { telegram_id: `${ctx.from.id}` },
       { lang: UserLangs.ru },
     );
-    ctx.session.lastMessage = await ctx.editMessageText(langMessages.ru, {
+    await ctx.editMessageText(langMessages.ru, {
       reply_markup: setLangKeys.ru,
     });
   }
 
-  @UseGuards(ChannelSubscriptionGuard)
+  @UseGuards(ChannelSubscriptionGuard, LastMessageGuard)
   @Action('shop')
   async shop(@Ctx() ctx) {
-    const currentUser = await this.userRepo.findOne({
-      where: { telegram_id: `${ctx.from.id}` },
+    await ctx.editMessageText(mainMessage[ctx.session.lang], {
+      reply_markup: shopKeys[ctx.session.lang],
     });
-    ctx.session.lastMessage = await ctx.editMessageText(
-      mainMessage[currentUser.lang],
-      {
-        reply_markup: shopKeys[currentUser.lang],
-      },
-    );
   }
 
+  @UseGuards(LastMessageGuard)
   @Action('startPayment')
   async startPayment(@Ctx() ctx) {
-    const currentUser = await this.userRepo.findOne({
-      where: { telegram_id: `${ctx.from.id}` },
+    await ctx.editMessageText(mainMessage[ctx.session.lang], {
+      reply_markup: paymentMethods[ctx.session.lang],
     });
-    ctx.session.lastMessage = await ctx.editMessageText(
-      mainMessage[currentUser.lang],
-      {
-        reply_markup: paymentMethods[currentUser.lang],
-      },
-    );
   }
 
+  @UseGuards(LastMessageGuard)
   @Action('pay')
   async pay(@Ctx() ctx) {
-    ctx.session.lastMessage = await ctx.editMessageText(
+    await ctx.editMessageText(
       `<code>9860190112424188</code>\n` +
         `Alimov Hoshim\n` +
         `Aloqa bank\n` +
@@ -257,100 +240,64 @@ export class ActionsService {
     await ctx.scene.enter('PAYMENT_SCENE');
   }
 
-  @UseGuards(ChannelSubscriptionGuard)
+  @UseGuards(ChannelSubscriptionGuard, LastMessageGuard)
   @Action('manual')
   async manual(@Ctx() ctx) {
-    const currentUser = await this.userRepo.findOne({
-      where: { telegram_id: `${ctx.from.id}` },
+    await ctx.editMessageText(manualCommandMessage[ctx.session.lang], {
+      reply_markup: backToMenuKeys[ctx.session.lang],
     });
-    ctx.session.lastMessage = await ctx.editMessageText(
-      manualCommandMessage[currentUser.lang],
-      {
-        reply_markup: backToMenuKeys[currentUser.lang],
-      },
-    );
   }
 
-  @UseGuards(ChannelSubscriptionGuard)
+  @UseGuards(ChannelSubscriptionGuard, LastMessageGuard)
   @Action('forHelp')
   async forHelp(@Ctx() ctx) {
-    const currentUser = await this.userRepo.findOne({
-      where: { telegram_id: `${ctx.from.id}` },
+    await ctx.editMessageText(helpCommandMessages[ctx.session.lang], {
+      reply_markup: backToMenuKeys[ctx.session.lang],
+      parse_mode: 'HTML',
     });
-    ctx.session.lastMessage = await ctx.editMessageText(
-      helpCommandMessages[currentUser.lang],
-      {
-        reply_markup: backToMenuKeys[currentUser.lang],
-        parse_mode: 'HTML',
-      },
-    );
   }
 
+  @UseGuards(LastMessageGuard)
   @Action('backToShop')
   async backToShop(@Ctx() ctx) {
-    const currentUser = await this.userRepo.findOne({
-      where: { telegram_id: `${ctx.from.id}` },
+    await ctx.editMessageText(mainMessage[ctx.session.lang], {
+      reply_markup: shopKeys[ctx.session.lang],
     });
-    ctx.session.lastMessage = await ctx.editMessageText(
-      mainMessage[currentUser.lang],
-      {
-        reply_markup: shopKeys[currentUser.lang],
-      },
-    );
   }
 
+  @UseGuards(LastMessageGuard)
   @Action('pubg')
   async pubg(@Ctx() ctx) {
-    const currentUser = await this.userRepo.findOne({
-      where: { telegram_id: `${ctx.from.id}` },
+    await ctx.editMessageText(mainMessage[ctx.session.lang], {
+      reply_markup: pubgKeys[ctx.session.lang],
     });
-    ctx.session.lastMessage = await ctx.editMessageText(
-      mainMessage[currentUser.lang],
-      {
-        reply_markup: pubgKeys[currentUser.lang],
-      },
-    );
   }
 
+  @UseGuards(LastMessageGuard)
   @Action('ff')
   async freeFire(@Ctx() ctx) {
-    const currentUser = await this.userRepo.findOne({
-      where: { telegram_id: `${ctx.from.id}` },
+    await ctx.editMessageText(mainMessage[ctx.session.lang], {
+      reply_markup: freeFireKeys[ctx.session.lang],
     });
-    ctx.session.lastMessage = await ctx.editMessageText(
-      mainMessage[currentUser.lang],
-      {
-        reply_markup: freeFireKeys[currentUser.lang],
-      },
-    );
   }
 
+  @UseGuards(LastMessageGuard)
   @Action('mlbb_sng')
   async mlbb_sng(@Ctx() ctx) {
-    const currentUser = await this.userRepo.findOne({
-      where: { telegram_id: `${ctx.from.id}` },
+    await ctx.editMessageText(mainMessage[ctx.session.lang], {
+      reply_markup: mobileLegendsSng[ctx.session.lang],
     });
-    ctx.session.lastMessage = await ctx.editMessageText(
-      mainMessage[currentUser.lang],
-      {
-        reply_markup: mobileLegendsSng[currentUser.lang],
-      },
-    );
   }
 
+  @UseGuards(LastMessageGuard)
   @Action('mlbb_turk')
   async mlbb_turk(@Ctx() ctx) {
-    const currentUser = await this.userRepo.findOne({
-      where: { telegram_id: `${ctx.from.id}` },
+    await ctx.editMessageText(mainMessage[ctx.session.lang], {
+      reply_markup: mobileLegendsTurk[ctx.session.lang],
     });
-    ctx.session.lastMessage = await ctx.editMessageText(
-      mainMessage[currentUser.lang],
-      {
-        reply_markup: mobileLegendsTurk[currentUser.lang],
-      },
-    );
   }
 
+  @UseGuards(LastMessageGuard)
   @Action(/shop_key/)
   async pubgShop(@Ctx() ctx) {
     const currentUser = await this.userRepo.findOne({
@@ -358,12 +305,9 @@ export class ActionsService {
     });
     const price = ctx.update.callback_query.data.split('=')[2];
     if (+currentUser.balance < +price) {
-      ctx.session.lastMessage = await ctx.editMessageText(
-        balanceMessage[currentUser.lang],
-        {
-          reply_markup: paymentButtons[currentUser.lang],
-        },
-      );
+      await ctx.editMessageText(balanceMessage[ctx.session.lang], {
+        reply_markup: paymentButtons[ctx.session.lang],
+      });
       return;
     }
     await ctx.scene.enter('ORDER_SCENE');
@@ -377,7 +321,7 @@ export class ActionsService {
     if (currentUser.role != 'admin') {
       await ctx.telegram.answerCbQuery(
         ctx.callbackQuery.id,
-        isNotAdminMessages[currentUser.lang],
+        isNotAdminMessages[ctx.session.lang],
         {
           show_alert: true,
         },
@@ -395,7 +339,7 @@ export class ActionsService {
     );
     payment.status = Status.done;
     await this.paymentRepo.save(payment);
-    ctx.session.lastMessage = await ctx.editMessageCaption(
+    await ctx.editMessageCaption(
       `Email: ${payment.user.email}\n` +
         `Telefon: ${payment.user.phone_number}\n` +
         `Miqdor: ${payment.amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')} so'm\n` +
@@ -411,7 +355,7 @@ export class ActionsService {
     if (currentUser.role != 'admin') {
       await ctx.telegram.answerCbQuery(
         ctx.callbackQuery.id,
-        isNotAdminMessages[currentUser.lang],
+        isNotAdminMessages[ctx.session.lang],
         {
           show_alert: true,
         },
@@ -441,7 +385,7 @@ export class ActionsService {
     if (currentUser.role != 'admin') {
       await ctx.telegram.answerCbQuery(
         ctx.callbackQuery.id,
-        isNotAdminMessages[currentUser.lang],
+        isNotAdminMessages[ctx.session.lang],
         {
           show_alert: true,
         },
@@ -475,7 +419,7 @@ export class ActionsService {
     if (currentUser.role !== 'admin') {
       await ctx.telegram.answerCbQuery(
         ctx.callbackQuery.id,
-        isNotAdminMessages[currentUser.lang],
+        isNotAdminMessages[ctx.session.lang],
         { show_alert: true },
       );
       return;
@@ -505,6 +449,7 @@ export class ActionsService {
     );
   }
 
+  @UseGuards(LastMessageGuard)
   @Action('orderHistory')
   async orderHistory(@Ctx() ctx) {
     const currentUser = await this.userRepo.findOne({
@@ -526,7 +471,7 @@ export class ActionsService {
     if (orders.length == 0) {
       await ctx.telegram.answerCbQuery(
         ctx.callbackQuery.id,
-        noOrderMessage[currentUser.lang],
+        noOrderMessage[ctx.session.lang],
         {
           show_alert: true,
         },
@@ -558,17 +503,18 @@ export class ActionsService {
 
     rows.push([
       Markup.button.callback(
-        backToProfileText[currentUser.lang],
+        backToProfileText[ctx.session.lang],
         'backToProfile',
       ),
     ]);
 
-    ctx.session.lastMessage = await ctx.editMessageText(
-      orderHistoryMessage[currentUser.lang],
+    await ctx.editMessageText(
+      orderHistoryMessage[ctx.session.lang],
       Markup.inlineKeyboard(rows),
     );
   }
 
+  @UseGuards(LastMessageGuard)
   @Action('prev_order')
   async prevOrder(@Ctx() ctx) {
     const currentUser = await this.userRepo.findOne({
@@ -577,7 +523,7 @@ export class ActionsService {
     if (ctx.session.page && ctx.session.page == 1) {
       await ctx.telegram.answerCbQuery(
         ctx.callbackQuery.id,
-        startOfListMessages[currentUser.lang],
+        startOfListMessages[ctx.session.lang],
         {
           show_alert: true,
         },
@@ -600,7 +546,7 @@ export class ActionsService {
     if (orders.length == 0) {
       await ctx.telegram.answerCbQuery(
         ctx.callbackQuery.id,
-        noOrderMessage[currentUser.lang],
+        noOrderMessage[ctx.session.lang],
         {
           show_alert: true,
         },
@@ -632,17 +578,18 @@ export class ActionsService {
 
     rows.push([
       Markup.button.callback(
-        backToProfileText[currentUser.lang],
+        backToProfileText[ctx.session.lang],
         'backToProfile',
       ),
     ]);
 
-    ctx.session.lastMessage = await ctx.editMessageText(
-      orderHistoryMessage[currentUser.lang],
+    await ctx.editMessageText(
+      orderHistoryMessage[ctx.session.lang],
       Markup.inlineKeyboard(rows),
     );
   }
 
+  @UseGuards(LastMessageGuard)
   @Action('next_order')
   async nextOrder(@Ctx() ctx) {
     const currentUser = await this.userRepo.findOne({
@@ -665,7 +612,7 @@ export class ActionsService {
       ctx.session.page--;
       await ctx.telegram.answerCbQuery(
         ctx.callbackQuery.id,
-        endOfListMessages[currentUser.lang],
+        endOfListMessages[ctx.session.lang],
         {
           show_alert: true,
         },
@@ -697,17 +644,18 @@ export class ActionsService {
 
     rows.push([
       Markup.button.callback(
-        backToProfileText[currentUser.lang],
+        backToProfileText[ctx.session.lang],
         'backToProfile',
       ),
     ]);
 
-    ctx.session.lastMessage = await ctx.editMessageText(
-      orderHistoryMessage[currentUser.lang],
+    await ctx.editMessageText(
+      orderHistoryMessage[ctx.session.lang],
       Markup.inlineKeyboard(rows),
     );
   }
 
+  @UseGuards(LastMessageGuard)
   @Action(/order_date/)
   async orderDate(@Ctx() ctx) {
     const currentUser = await this.userRepo.findOne({
@@ -721,25 +669,26 @@ export class ActionsService {
         status: Status.done,
       },
     });
-    await ctx.editMessageText(purchasedListMessage[currentUser.lang]);
+    await ctx.editMessageText(purchasedListMessage[ctx.session.lang]);
     for (const order of orders) {
       await ctx.reply(
         `🎮 <b>${order.game_type.split('_')[0]}</b>\n` +
           `🆔 <code>${order.game_id}</code>\n` +
           `💸 ${order.amount}\n` +
-          `💵 ${order.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')} ${valuteMessage[currentUser.lang]}\n` +
-          `${paidOrderMessages[currentUser.lang]}`,
+          `💵 ${order.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')} ${valuteMessage[ctx.session.lang]}\n` +
+          `${paidOrderMessages[ctx.session.lang]}`,
         {
           parse_mode: 'HTML',
         },
       );
     }
-    ctx.session.lastMessage = await ctx.reply(mainMessage[currentUser.lang], {
-      reply_markup: profileKeys[currentUser.lang],
+    ctx.session.lastMessage = await ctx.reply(mainMessage[ctx.session.lang], {
+      reply_markup: profileKeys[ctx.session.lang],
     });
     return;
   }
 
+  @UseGuards(LastMessageGuard)
   @Action('paymentHistory')
   async paymentHistory(@Ctx() ctx) {
     const currentUser = await this.userRepo.findOne({
@@ -761,7 +710,7 @@ export class ActionsService {
     if (payments.length == 0) {
       await ctx.telegram.answerCbQuery(
         ctx.callbackQuery.id,
-        noPaymentMessage[currentUser.lang],
+        noPaymentMessage[ctx.session.lang],
         {
           show_alert: true,
         },
@@ -793,17 +742,18 @@ export class ActionsService {
 
     rows.push([
       Markup.button.callback(
-        backToProfileText[currentUser.lang],
+        backToProfileText[ctx.session.lang],
         'backToProfile',
       ),
     ]);
 
-    ctx.session.lastMessage = await ctx.editMessageText(
-      paymentHistoryMessage[currentUser.lang],
+    await ctx.editMessageText(
+      paymentHistoryMessage[ctx.session.lang],
       Markup.inlineKeyboard(rows),
     );
   }
 
+  @UseGuards(LastMessageGuard)
   @Action('prev_payment')
   async prevPayment(@Ctx() ctx) {
     const currentUser = await this.userRepo.findOne({
@@ -812,7 +762,7 @@ export class ActionsService {
     if (ctx.session.page && ctx.session.page == 1) {
       await ctx.telegram.answerCbQuery(
         ctx.callbackQuery.id,
-        startOfListMessages[currentUser.lang],
+        startOfListMessages[ctx.session.lang],
         {
           show_alert: true,
         },
@@ -835,7 +785,7 @@ export class ActionsService {
     if (payments.length == 0) {
       await ctx.telegram.answerCbQuery(
         ctx.callbackQuery.id,
-        noPaymentMessage[currentUser.lang],
+        noPaymentMessage[ctx.session.lang],
         {
           show_alert: true,
         },
@@ -867,17 +817,18 @@ export class ActionsService {
 
     rows.push([
       Markup.button.callback(
-        backToProfileText[currentUser.lang],
+        backToProfileText[ctx.session.lang],
         'backToProfile',
       ),
     ]);
 
-    ctx.session.lastMessage = await ctx.editMessageText(
-      orderHistoryMessage[currentUser.lang],
+    await ctx.editMessageText(
+      orderHistoryMessage[ctx.session.lang],
       Markup.inlineKeyboard(rows),
     );
   }
 
+  @UseGuards(LastMessageGuard)
   @Action('next_payment')
   async next(@Ctx() ctx) {
     const currentUser = await this.userRepo.findOne({
@@ -900,7 +851,7 @@ export class ActionsService {
       ctx.session.page--;
       await ctx.telegram.answerCbQuery(
         ctx.callbackQuery.id,
-        endOfListMessages[currentUser.lang],
+        endOfListMessages[ctx.session.lang],
         {
           show_alert: true,
         },
@@ -932,17 +883,18 @@ export class ActionsService {
 
     rows.push([
       Markup.button.callback(
-        backToProfileText[currentUser.lang],
+        backToProfileText[ctx.session.lang],
         'backToProfile',
       ),
     ]);
 
-    ctx.session.lastMessage = await ctx.editMessageText(
-      orderHistoryMessage[currentUser.lang],
+    await ctx.editMessageText(
+      orderHistoryMessage[ctx.session.lang],
       Markup.inlineKeyboard(rows),
     );
   }
 
+  @UseGuards(LastMessageGuard)
   @Action(/payment_date/)
   async paymentDate(@Ctx() ctx) {
     const currentUser = await this.userRepo.findOne({
@@ -956,7 +908,7 @@ export class ActionsService {
         status: Status.done,
       },
     });
-    await ctx.editMessageText(paymentHistoryMessage[currentUser.lang]);
+    await ctx.editMessageText(paymentHistoryMessage[ctx.session.lang]);
 
     for (const payment of payments) {
       await ctx.telegram.sendPhoto(
@@ -966,19 +918,19 @@ export class ActionsService {
         },
         {
           caption:
-            `${amountMessage[currentUser.lang]}${payment.amount
+            `${amountMessage[ctx.session.lang]}${payment.amount
               .toString()
               .replace(
                 /\B(?=(\d{3})+(?!\d))/g,
                 ',',
-              )} ${profileMessage[currentUser.lang][3]}\n` +
-            `${dateMessage[currentUser.lang]}${payment.payment_date.split('-').reverse().join('.')}\n` +
-            `${acceptedMessages[currentUser.lang]}`,
+              )} ${profileMessage[ctx.session.lang][3]}\n` +
+            `${dateMessage[ctx.session.lang]}${payment.payment_date.split('-').reverse().join('.')}\n` +
+            `${acceptedMessages[ctx.session.lang]}`,
         },
       );
     }
-    ctx.session.lastMessage = await ctx.reply(mainMessage[currentUser.lang], {
-      reply_markup: profileKeys[currentUser.lang],
+    ctx.session.lastMessage = await ctx.reply(mainMessage[ctx.session.lang], {
+      reply_markup: profileKeys[ctx.session.lang],
     });
     return;
   }
@@ -986,14 +938,8 @@ export class ActionsService {
   @UseGuards(ChannelSubscriptionGuard)
   @Action('subscribed')
   async subscribed(@Ctx() ctx) {
-    const currentUser = await this.userRepo.findOne({
-      where: { telegram_id: `${ctx.from.id}` },
+    await ctx.editMessageText(mainMessage[ctx.session.lang], {
+      reply_markup: menuKeys[ctx.session.lang],
     });
-    ctx.session.lastMessage = await ctx.editMessageText(
-      mainMessage[currentUser.lang],
-      {
-        reply_markup: menuKeys[currentUser.lang],
-      },
-    );
   }
 }

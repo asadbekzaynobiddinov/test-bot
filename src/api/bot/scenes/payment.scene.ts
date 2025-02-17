@@ -2,7 +2,6 @@ import { Scene, SceneEnter, On, Ctx } from 'nestjs-telegraf';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Payment, User } from 'src/core/entity';
 import { PaymentRepository, UserRepository } from 'src/core/repository';
-import { SceneContext } from 'telegraf/typings/scenes';
 import {
   paymentMessage1,
   paymentMessage2,
@@ -23,11 +22,8 @@ export class PaymentScene {
   ) {}
 
   @SceneEnter()
-  async sendPaymentMessage(@Ctx() ctx: SceneContext) {
-    const currentUser = await this.userRepo.findOne({
-      where: { telegram_id: `${ctx.from.id}` },
-    });
-    await ctx.reply(paymentMessage1[currentUser.lang][0]);
+  async sendPaymentMessage(@Ctx() ctx) {
+    await ctx.reply(paymentMessage1[ctx.session.lang][0]);
   }
 
   @On('text')
@@ -44,12 +40,12 @@ export class PaymentScene {
         amount.includes('.') ||
         amount.includes(',')
       ) {
-        await ctx.reply(paymentMessage1[currentUser.lang][1]);
+        await ctx.reply(paymentMessage1[ctx.session.lang][1]);
         return;
       }
 
       if (+amount < 10000) {
-        await ctx.reply(paymentMessage1[currentUser.lang][2]);
+        await ctx.reply(paymentMessage1[ctx.session.lang][2]);
         return;
       }
 
@@ -77,10 +73,7 @@ export class PaymentImage {
 
   @SceneEnter()
   async sendImageMessage(@Ctx() ctx) {
-    const currentUser = await this.userRepo.findOne({
-      where: { telegram_id: `${ctx.from.id}` },
-    });
-    await ctx.reply(paymentMessage2[currentUser.lang][0]);
+    await ctx.reply(paymentMessage2[ctx.session.lang][0]);
   }
 
   @On('photo')
@@ -117,10 +110,10 @@ export class PaymentImage {
 
       await this.paymentRepo.save(payment);
 
-      await ctx.reply(paymentMessage3[currentUser.lang]);
+      await ctx.reply(paymentMessage3[ctx.session.lang]);
 
-      ctx.session.lastMessage = await ctx.reply(mainMessage[currentUser.lang], {
-        reply_markup: menuKeys[currentUser.lang],
+      ctx.session.lastMessage = await ctx.reply(mainMessage[ctx.session.lang], {
+        reply_markup: menuKeys[ctx.session.lang],
       });
 
       const chanelMessage =
